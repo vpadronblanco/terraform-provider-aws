@@ -50,6 +50,13 @@ func TestAccAWSSNSTopicSubscription_filterPolicy(t *testing.T) {
 				Config: testAccAWSSNSTopicSubscriptionConfig_filterPolicy(ri, strconv.Quote(filterPolicy2)),
 				Check:  resource.TestCheckResourceAttr("aws_sns_topic_subscription.test_subscription", "filter_policy", filterPolicy2),
 			},
+			// Trying to remove filter_policy should trigger ForceNew, SNS errors otherwise
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists("aws_sns_topic_subscription.test_subscription"),
+				),
+			},
 		},
 	})
 }

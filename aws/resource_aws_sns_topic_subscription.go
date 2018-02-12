@@ -37,6 +37,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		CustomizeDiff: customizeDiffResourceAwsSnsTopicSubscription,
 
 		Schema: map[string]*schema.Schema{
 			"protocol": {
@@ -206,6 +207,17 @@ func resourceAwsSnsTopicSubscriptionDelete(d *schema.ResourceData, meta interfac
 	})
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func customizeDiffResourceAwsSnsTopicSubscription(diff *schema.ResourceDiff, meta interface{}) error {
+	if "" == diff.Id() {
+		return nil
+	}
+	o, n := diff.GetChange("filter_policy")
+	if o.(string) != "" && n.(string) == "" {
+		diff.ForceNew("filter_policy")
 	}
 	return nil
 }
