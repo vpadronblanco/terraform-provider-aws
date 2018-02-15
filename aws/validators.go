@@ -80,8 +80,8 @@ func validateRdsEngine(v interface{}, k string) (ws []string, errors []error) {
 
 	if _, ok := validTypes[value]; !ok {
 		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid engine type %q. Valid types are either %q or %q.",
-			k, value, "aurora", "aurora-postgresql"))
+			"%q contains an invalid engine type %q. Valid types are either %q, %q or %q.",
+			k, value, "aurora", "aurora-mysql", "aurora-postgresql"))
 	}
 	return
 }
@@ -2144,30 +2144,6 @@ func validateAwsElastiCacheReplicationGroupAuthToken(v interface{}, k string) (w
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters or symbols (excluding @, \", and /) allowed in %q", k))
 	}
-	return
-}
-
-func validateServiceDiscoveryServiceDnsRecordsType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	validType := []string{"SRV", "A", "AAAA"}
-	for _, str := range validType {
-		if value == str {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
-	return
-}
-
-func validateServiceDiscoveryServiceHealthCheckConfigType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	validType := []string{"HTTP", "HTTPS", "TCP"}
-	for _, str := range validType {
-		if value == str {
-			return
-		}
-	}
-	errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, validType, value))
 	return
 }
 
