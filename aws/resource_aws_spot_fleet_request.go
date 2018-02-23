@@ -308,6 +308,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			"valid_until": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"spot_request_state": {
