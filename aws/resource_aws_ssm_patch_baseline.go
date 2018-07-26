@@ -137,6 +137,28 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Default:      ssm.PatchComplianceLevelUnspecified,
 				ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
 			},
+
+			"sources": {
+				Type:		schema.TypeSet,
+				Optional:	true,
+				Elem:		&schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:		schema.TypeString,
+							Required:	true,
+						},
+						"configuration": {
+							Type:		schema.TypeString,
+							Required:	true,
+						},
+						"products": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					}
+				}
+			}
 		},
 	}
 }
