@@ -154,6 +154,7 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 						"products": {
 							Type:     schema.TypeList,
 							Required: true,
+							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					}
@@ -190,6 +191,10 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 
 	if _, ok := d.GetOk("approval_rule"); ok {
 		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
+	}
+
+	if _, ok := g.GetOk("sources"); ok {
+		params.Sources = expandAwsSsmPatchSources(d)
 	}
 
 	resp, err := ssmconn.CreatePatchBaseline(params)
@@ -236,6 +241,10 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 		params.GlobalFilters = expandAwsSsmPatchFilterGroup(d)
 	}
 
+	if d.hasChange("sources") {
+		params.Sources = expandAwsSsmPatchSources(d)
+	}
+
 	_, err := ssmconn.UpdatePatchBaseline(params)
 	if err != nil {
 		return err
@@ -268,6 +277,10 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("approval_rule", flattenAwsSsmPatchRuleGroup(resp.ApprovalRules)); err != nil {
 		return fmt.Errorf("[DEBUG] Error setting approval rules error: %#v", err)
+	}
+
+	if err := d.Set("sources", flattenAwsSsmPatchBaseline(resp.Sources)); err != nil {
+		return fmt.Errorf("[DEBUG] Error setting baseline sources error: %#v", err)
 	}
 
 	return nil
@@ -387,4 +400,47 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 	}
 
 	return result
+}
+
+func expandAwsSsmPatchSources(d *schema.ResourceData) []*ssm.PatchSource {
+	var sources []*ssm.PatchSource
+
+	sourcesConfig := d.Get("sources").(*schema.Set)
+
+	for _, sourceConfig := range sourcesConfig.List() {
+		sourceCfg := sourceConfig.(map[string]interface{})
+
+		products := expandStringList(sourceCfg["products"].([]interface{}))
+		name := aws.String(sourceCfg["name"].(string))
+		condiguration := aws.String(sourceCfg["configuration"].(string))
+
+		sources = append(sources, 
+			&ssm.PatchSource{
+				Configuration: configuration, 
+				Name: name,
+				Products: products,
+			}
+		)
+	}
+
+	return sources
+}
+
+func flattenAwsSsmPatchSourcesGroup(sources []*ssm.PatchSource) []map[string]interface{} {
+	if len(sources) == 0 {
+		return nil
+	}
+
+	sourcesList := make([]map[string]interface{}, 0, len(sources))
+
+	for _, source := range sources {
+		s := make(map[string]interface{})
+		s["name"] = *source.Name
+		s["configuration"] = *source.Configuration
+		s["products"] = *source.Products
+
+		sourcesList = append(sourcesList, s)
+	}
+
+	return sourcesList
 }
